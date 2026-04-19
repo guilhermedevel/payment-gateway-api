@@ -1,4 +1,19 @@
+# AI tools
 .gemini/
 .specify/
 GEMINI.md
 specs/
+
+# Node.js
+node_modules/
+dist/
+build/
+*.log
+.env*
+coverage/
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/

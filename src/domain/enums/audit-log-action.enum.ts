@@ -1,0 +1,4 @@
+export enum AuditLogAction {
+  CHARGE_CREATED = 'CHARGE_CREATED',
+  STATUS_UPDATED = 'STATUS_UPDATED',
+}

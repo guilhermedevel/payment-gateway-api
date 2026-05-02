@@ -6,6 +6,7 @@ import { QueueModule } from '../infrastructure/queue/queue.module';
 import { CommonDomainModule } from '../domain/common/common.module';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
+import { ChargesModule } from './charges.module';
 
 @Module({
   imports: [
@@ -29,8 +30,8 @@ import { APP_FILTER } from '@nestjs/core';
     }),
     QueueModule,
     CommonDomainModule,
+    ChargesModule,
   ],
-  controllers: [],
   providers: [
     {
       provide: APP_FILTER,

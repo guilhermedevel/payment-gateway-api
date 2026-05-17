@@ -10,11 +10,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { IdempotencyRecord } from '../../../src/domain/entities/idempotency-record.entity';
 import { IdempotencyInterceptor } from '../../../src/common/interceptors/idempotency.interceptor';
-import { of } from 'rxjs';
 
-describe('ChargesController (Contract)', () => {
+describe('ChargesController (Contract Queries)', () => {
   let app: INestApplication;
-  let createChargeUseCase: any;
+  let getChargeUseCase: any;
+  let listChargesUseCase: any;
 
   beforeEach(async () => {
     const createChargeUseCaseMock = {
@@ -59,41 +59,51 @@ describe('ChargesController (Contract)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    createChargeUseCase = moduleFixture.get<CreateChargeUseCase>(CreateChargeUseCase);
+    getChargeUseCase = moduleFixture.get<GetChargeUseCase>(GetChargeUseCase);
+    listChargesUseCase = moduleFixture.get<ListChargesUseCase>(ListChargesUseCase);
   });
 
-  it('POST /charges should return 201 and the created charge', async () => {
-    const payload = {
-      amount: 5000,
+  it('GET /charges/:id should return 200 and the charge with history', async () => {
+    const chargeWithHistory = {
+      id: 'uuid-123',
+      amount: 1000,
       currency: 'BRL',
-      customerEmail: 'test@example.com',
+      status: ChargeStatus.APPROVED,
+      history: [
+        {
+          action: 'CHARGE_CREATED',
+          new_status: 'created',
+          timestamp: '2026-04-19T10:00:00Z',
+        },
+      ],
     };
 
-    const createdCharge = {
-      id: 'uuid',
-      ...payload,
-      status: ChargeStatus.CREATED,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    getChargeUseCase.execute.mockResolvedValue(chargeWithHistory);
 
-    createChargeUseCase.execute.mockResolvedValue(createdCharge);
+    const response = await request(app.getHttpServer()).get('/charges/uuid-123');
 
-    const response = await request(app.getHttpServer())
-      .post('/charges')
-      .set('Idempotency-Key', 'unique-key')
-      .send(payload);
-
-    expect(response.status).toBe(201);
-    expect(response.body).toEqual(createdCharge);
-    expect(createChargeUseCase.execute).toHaveBeenCalledWith({
-      ...payload,
-      idempotencyKey: 'unique-key',
-    });
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(chargeWithHistory);
+    expect(getChargeUseCase.execute).toHaveBeenCalledWith('uuid-123');
   });
 
-  it('POST /charges should return 400 if validation fails', async () => {
-    // Validation logic is usually in main.ts or decorators, 
-    // but here we can just test if controller handles it or if use case throws.
+  it('GET /charges should return 200 and the list of charges', async () => {
+    const chargesList = [
+      {
+        id: 'uuid-123',
+        amount: 1000,
+        currency: 'BRL',
+        status: ChargeStatus.APPROVED,
+        created_at: '2026-04-19T10:00:00Z',
+      },
+    ];
+
+    listChargesUseCase.execute.mockResolvedValue(chargesList);
+
+    const response = await request(app.getHttpServer()).get('/charges');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(chargesList);
+    expect(listChargesUseCase.execute).toHaveBeenCalled();
   });
 });

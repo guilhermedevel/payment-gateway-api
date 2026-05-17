@@ -5,6 +5,10 @@ import { ChargesController } from '../../../src/app/controllers/charges.controll
 import { CreateChargeUseCase } from '../../../src/use-cases/create-charge.use-case';
 import { ChargeStatus } from '../../../src/domain/enums/charge-status.enum';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { IdempotencyRecord } from '../../../src/domain/entities/idempotency-record.entity';
+import { IdempotencyInterceptor } from '../../../src/common/interceptors/idempotency.interceptor';
+import { of } from 'rxjs';
 
 describe('ChargesController (Contract)', () => {
   let app: INestApplication;
@@ -15,6 +19,11 @@ describe('ChargesController (Contract)', () => {
       execute: vi.fn(),
     };
 
+    const idempotencyRepositoryMock = {
+      findOne: vi.fn().mockResolvedValue(null),
+      save: vi.fn().mockResolvedValue({}),
+    };
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [ChargesController],
       providers: [
@@ -22,6 +31,11 @@ describe('ChargesController (Contract)', () => {
           provide: CreateChargeUseCase,
           useValue: createChargeUseCaseMock,
         },
+        {
+          provide: getRepositoryToken(IdempotencyRecord),
+          useValue: idempotencyRepositoryMock,
+        },
+        IdempotencyInterceptor,
       ],
     }).compile();
 

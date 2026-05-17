@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { ChargesController } from '../../../src/app/controllers/charges.controller';
 import { CreateChargeUseCase } from '../../../src/use-cases/create-charge.use-case';
+import { GetChargeUseCase } from '../../../src/use-cases/get-charge.use-case';
+import { ListChargesUseCase } from '../../../src/use-cases/list-charges.use-case';
 import { IdempotencyInterceptor } from '../../../src/common/interceptors/idempotency.interceptor';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { IdempotencyRecord } from '../../../src/domain/entities/idempotency-record.entity';
@@ -19,6 +21,14 @@ describe('Idempotency Integration', () => {
       execute: vi.fn(),
     };
 
+    const getChargeUseCaseMock = {
+      execute: vi.fn(),
+    };
+
+    const listChargesUseCaseMock = {
+      execute: vi.fn(),
+    };
+
     const idempotencyRepositoryMock = {
       findOne: vi.fn(),
       save: vi.fn(),
@@ -30,6 +40,14 @@ describe('Idempotency Integration', () => {
         {
           provide: CreateChargeUseCase,
           useValue: createChargeUseCaseMock,
+        },
+        {
+          provide: GetChargeUseCase,
+          useValue: getChargeUseCaseMock,
+        },
+        {
+          provide: ListChargesUseCase,
+          useValue: listChargesUseCaseMock,
         },
         {
           provide: getRepositoryToken(IdempotencyRecord),
